@@ -11,6 +11,7 @@ import { CanvasSpy } from "./backend/spies/canvasSpy";
 import { Program } from "./backend/webGlObjects/webGlObjects";
 
 const CAPTURE_LIMIT = 10000; // Limit command count to 10000 record (to be kept in sync with the documentation)
+const MAX_TIMEOUT = 15 * 1000; // 15 seconds
 
 export interface IAvailableContext {
     readonly canvas: HTMLCanvasElement | OffscreenCanvas;
@@ -258,7 +259,7 @@ export class Spector {
                 else {
                     this.onErrorInternal("No frames detected. Try moving the camera or implementing requestAnimationFrame.");
                 }
-            }, 10 * 1000);
+            }, MAX_TIMEOUT);
         }
     }
 
