@@ -9,8 +9,6 @@ import { ContextSpy } from "./backend/spies/contextSpy";
 import { TimeSpy } from "./backend/spies/timeSpy";
 import { CanvasSpy } from "./backend/spies/canvasSpy";
 import { Program } from "./backend/webGlObjects/webGlObjects";
-import { CaptureMenu } from "./embeddedFrontend/captureMenu/captureMenu";
-import { ResultView } from "./embeddedFrontend/resultView/resultView";
 
 const CAPTURE_LIMIT = 10000; // Limit command count to 10000 record (to be kept in sync with the documentation)
 
@@ -18,11 +16,6 @@ export interface IAvailableContext {
     readonly canvas: HTMLCanvasElement | OffscreenCanvas;
     readonly contextSpy: ContextSpy;
 }
-
-export const EmbeddedFrontend = {
-    CaptureMenu,
-    ResultView,
-};
 
 interface IAnnotatedOffscreenCanvas extends OffscreenCanvas {
     __spector_context_type?: string;
@@ -39,7 +32,7 @@ export class Spector {
     }
 
     private static tryGetContextFromHelperField(canvas: HTMLCanvasElement | OffscreenCanvas): WebGLRenderingContexts {
-        const type: string|void = canvas instanceof HTMLCanvasElement ?
+        const type: string | void = canvas instanceof HTMLCanvasElement ?
             canvas.getAttribute("__spector_context_type") :
             (canvas as IAnnotatedOffscreenCanvas).__spector_context_type;
 
@@ -77,8 +70,6 @@ export class Spector {
     private quickCapture: boolean;
     private fullCapture: boolean;
     private capturingContext: ContextSpy;
-    private captureMenu: CaptureMenu;
-    private resultView: ResultView;
     private retry: number;
     private noFrameTimeout = -1;
     private marker: string;
@@ -99,64 +90,6 @@ export class Spector {
         this.timeSpy.onFrameStart.add(this.onFrameStart, this);
         this.timeSpy.onFrameEnd.add(this.onFrameEnd, this);
         this.timeSpy.onError.add(this.onErrorInternal, this);
-    }
-
-    public displayUI(disableTracking: boolean = false) {
-        if (!this.captureMenu) {
-            this.getCaptureUI();
-
-            this.captureMenu.onPauseRequested.add(this.pause, this);
-            this.captureMenu.onPlayRequested.add(this.play, this);
-            this.captureMenu.onPlayNextFrameRequested.add(this.playNextFrame, this);
-            this.captureMenu.onCaptureRequested.add((info) => {
-                if (info) {
-                    this.captureCanvas(info.ref);
-                }
-            }, this);
-
-            setInterval(() => { this.captureMenu.setFPS(this.getFps()); }, 1000);
-
-            if (!disableTracking) {
-                this.captureMenu.trackPageCanvases();
-            }
-
-            this.captureMenu.display();
-        }
-
-        if (!this.resultView) {
-            this.getResultUI();
-
-            this.onCapture.add((capture) => {
-                this.resultView.display();
-                this.resultView.addCapture(capture);
-            });
-        }
-    }
-
-    public getResultUI(): ResultView {
-        if (!this.resultView) {
-            this.resultView = new ResultView();
-            this.resultView.onSourceCodeChanged.add((sourceCodeEvent) => {
-                this.rebuildProgramFromProgramId(sourceCodeEvent.programId,
-                    sourceCodeEvent.sourceVertex,
-                    sourceCodeEvent.sourceFragment,
-                    (program) => {
-                        this.referenceNewProgram(sourceCodeEvent.programId, program);
-                        this.resultView.showSourceCodeError(null);
-                    },
-                    (error) => {
-                        this.resultView.showSourceCodeError(error);
-                    });
-            });
-        }
-        return this.resultView;
-    }
-
-    public getCaptureUI(): CaptureMenu {
-        if (!this.captureMenu) {
-            this.captureMenu = new CaptureMenu();
-        }
-        return this.captureMenu;
     }
 
     public rebuildProgramFromProgramId(programId: number,
@@ -470,9 +403,6 @@ export class Spector {
     }
 
     private triggerCapture(capture: ICapture) {
-        if (this.captureMenu) {
-            this.captureMenu.captureComplete(null);
-        }
         this.onCapture.trigger(capture);
     }
 
@@ -488,9 +418,6 @@ export class Spector {
             this.captureNextCommands = 0;
             this.retry = 0;
 
-            if (this.captureMenu) {
-                this.captureMenu.captureComplete(error);
-            }
             this.onError.trigger(error);
         }
         else {

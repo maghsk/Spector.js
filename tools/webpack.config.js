@@ -11,11 +11,6 @@ var buildConfig = function(env) {
         watch: !isProd,
         context: MAIN_DIR,
         entry: [
-            "./vendors/ace.js",
-            "./vendors/ace-mode-glsl.js",
-            "./vendors/ace-theme-monokai.js",
-            "./vendors/ace-theme-override.css",
-            "./vendors/ace-ext-searchbox.js",
             "./src/spector.ts"
         ],
         output: {
